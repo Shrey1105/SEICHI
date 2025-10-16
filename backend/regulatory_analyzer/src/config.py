@@ -18,6 +18,14 @@ ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30")
 # Google Gemini API Configuration
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "AIzaSyDgkpNwPCqWo2DoroIAwqd9JQPJXwLSMPY")
 
+# Box API Configuration
+BOX_CLIENT_ID = os.getenv("BOX_CLIENT_ID", "")
+BOX_CLIENT_SECRET = os.getenv("BOX_CLIENT_SECRET", "")
+BOX_ACCESS_TOKEN = os.getenv("BOX_ACCESS_TOKEN", "")
+BOX_REFRESH_TOKEN = os.getenv("BOX_REFRESH_TOKEN", "")
+BOX_ENTERPRISE_ID = os.getenv("BOX_ENTERPRISE_ID", "")
+BOX_FOLDER_ID = os.getenv("BOX_FOLDER_ID", "0")  # Root folder by default
+
 # Application Configuration
 DEBUG = os.getenv("DEBUG", "True").lower() == "true"
 HOST = os.getenv("HOST", "0.0.0.0")

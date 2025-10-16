@@ -9,7 +9,7 @@ import uvicorn
 from contextlib import asynccontextmanager
 import logging
 
-from src.api import auth, reports, history, schedules, management, analysis
+from src.api import auth, reports, history, schedules, management, analysis, box
 from src.database.session import engine, Base
 from src.core.pipeline.orchestrator import AnalysisOrchestrator
 from src.socketio_server import socket_app, sio
@@ -56,6 +56,7 @@ app.include_router(history.router, prefix="/api/history", tags=["History"])
 app.include_router(schedules.router, prefix="/api/schedules", tags=["Schedules"])
 app.include_router(management.router, prefix="/api/management", tags=["Management"])
 app.include_router(analysis.router, prefix="/api/analysis", tags=["Analysis"])
+app.include_router(box.router, prefix="/api", tags=["Box"])
 
 @app.get("/")
 async def root():

@@ -117,3 +117,45 @@ class Schedule(Base):
     # Relationships
     user = relationship("User")
     company_profile = relationship("CompanyProfile")
+
+class BoxDocument(Base):
+    __tablename__ = "box_documents"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    report_id = Column(Integer, ForeignKey("reports.id"), nullable=True)
+    box_file_id = Column(String(255), unique=True, nullable=False)
+    box_folder_id = Column(String(255), nullable=True)
+    filename = Column(String(500), nullable=False)
+    file_type = Column(String(100))  # pdf, doc, docx, txt, etc.
+    file_size = Column(Integer)  # Size in bytes
+    description = Column(Text)
+    shared_link = Column(String(1000))  # Box shared link
+    download_url = Column(String(1000))  # Box download URL
+    document_category = Column(String(100))  # compliance_report, regulatory_change, policy_document, audit_report
+    is_public = Column(Boolean, default=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    # Relationships
+    user = relationship("User")
+    report = relationship("Report")
+
+class BoxFolder(Base):
+    __tablename__ = "box_folders"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    company_profile_id = Column(Integer, ForeignKey("company_profiles.id"), nullable=True)
+    box_folder_id = Column(String(255), unique=True, nullable=False)
+    parent_folder_id = Column(String(255), nullable=True)
+    folder_name = Column(String(500), nullable=False)
+    folder_type = Column(String(100))  # regulatory_documents, compliance_reports, etc.
+    description = Column(Text)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    # Relationships
+    user = relationship("User")
+    company_profile = relationship("CompanyProfile")

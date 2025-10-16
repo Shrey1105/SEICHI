@@ -207,3 +207,79 @@ class AnalysisResult(BaseModel):
     status: str
     regulatory_changes: List[RegulatoryChange]
     summary: Dict[str, Any]
+
+# Box API Schemas
+class BoxDocumentBase(BaseModel):
+    filename: str
+    file_type: Optional[str] = None
+    file_size: Optional[int] = None
+    description: Optional[str] = None
+    document_category: Optional[str] = "regulatory_document"
+    is_public: Optional[bool] = False
+
+class BoxDocumentCreate(BoxDocumentBase):
+    box_file_id: str
+    box_folder_id: Optional[str] = None
+    report_id: Optional[int] = None
+    shared_link: Optional[str] = None
+    download_url: Optional[str] = None
+
+class BoxDocumentUpdate(BaseModel):
+    description: Optional[str] = None
+    document_category: Optional[str] = None
+    is_public: Optional[bool] = None
+
+class BoxDocumentResponse(BoxDocumentBase):
+    id: int
+    box_file_id: str
+    box_folder_id: Optional[str] = None
+    report_id: Optional[int] = None
+    shared_link: Optional[str] = None
+    download_url: Optional[str] = None
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+    
+    class Config:
+        from_attributes = True
+
+class BoxFolderBase(BaseModel):
+    folder_name: str
+    folder_type: Optional[str] = "regulatory_documents"
+    description: Optional[str] = None
+
+class BoxFolderCreate(BoxFolderBase):
+    box_folder_id: str
+    parent_folder_id: Optional[str] = None
+    company_profile_id: Optional[int] = None
+
+class BoxFolderUpdate(BaseModel):
+    folder_name: Optional[str] = None
+    folder_type: Optional[str] = None
+    description: Optional[str] = None
+    is_active: Optional[bool] = None
+
+class BoxFolderResponse(BoxFolderBase):
+    id: int
+    box_folder_id: str
+    parent_folder_id: Optional[str] = None
+    company_profile_id: Optional[int] = None
+    is_active: bool
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+    
+    class Config:
+        from_attributes = True
+
+class BoxUploadResponse(BaseModel):
+    id: int
+    box_file_id: str
+    filename: str
+    file_type: Optional[str] = None
+    file_size: Optional[int] = None
+    shared_link: Optional[str] = None
+    download_url: Optional[str] = None
+    document_category: Optional[str] = None
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True

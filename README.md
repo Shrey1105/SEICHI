@@ -34,6 +34,12 @@ A comprehensive AI-powered platform for monitoring and analyzing regulatory chan
 - **Google Gemini API**: AI-powered content analysis and insights generation
 - **Custom Pipeline**: 4-stage analysis pipeline (Query Generation, Data Acquisition, Content Filtering, AI Analysis)
 
+### Document Management
+- **Box API Integration**: Cloud document storage and management
+- **File Upload/Download**: Secure document handling with Box cloud storage
+- **Folder Management**: Organized document structure with regulatory categories
+- **Shared Links**: Secure document sharing with access controls
+
 ## Project Structure
 
 ```
@@ -49,7 +55,8 @@ regulatory-intelligence-platform/
 │           │   ├── reports.py     # Report management
 │           │   ├── history.py     # Analysis history
 │           │   ├── schedules.py   # Scheduled analyses
-│           │   └── management.py  # Company profiles & sources
+│           │   ├── management.py  # Company profiles & sources
+│           │   └── box.py         # Box API integration
 │           ├── core/
 │           │   └── pipeline/      # AI analysis pipeline
 │           │       ├── orchestrator.py    # Pipeline coordinator
@@ -60,12 +67,15 @@ regulatory-intelligence-platform/
 │           ├── database/
 │           │   ├── models.py      # SQLAlchemy models
 │           │   └── session.py     # Database configuration
+│           ├── services/
+│           │   └── box_service.py # Box API service
 │           ├── config.py          # Application configuration
 │           └── schemas.py         # Pydantic schemas
 └── frontend/
     ├── src/
     │   ├── components/            # React components
     │   │   ├── Layout/           # Layout components
+    │   │   ├── Box/              # Box integration components
     │   │   └── ui/               # Reusable UI components
     │   ├── pages/                # Page components
     │   │   ├── Dashboard.tsx     # Main dashboard
@@ -73,6 +83,7 @@ regulatory-intelligence-platform/
     │   │   ├── Reports.tsx       # Reports listing
     │   │   ├── ReportDetail.tsx  # Report details
     │   │   ├── Settings.tsx      # User settings
+    │   │   ├── BoxDocuments.tsx  # Box document management
     │   │   ├── Login.tsx         # Authentication
     │   │   └── Register.tsx      # User registration
     │   ├── store/                # Redux store
@@ -166,6 +177,14 @@ ACCESS_TOKEN_EXPIRE_MINUTES=30
 # Google Gemini API
 GEMINI_API_KEY=your-gemini-api-key-here
 
+# Box API Configuration
+BOX_CLIENT_ID=your-box-client-id-here
+BOX_CLIENT_SECRET=your-box-client-secret-here
+BOX_ACCESS_TOKEN=your-box-access-token-here
+BOX_REFRESH_TOKEN=your-box-refresh-token-here
+BOX_ENTERPRISE_ID=your-box-enterprise-id-here
+BOX_FOLDER_ID=0
+
 # Application Configuration
 DEBUG=True
 HOST=0.0.0.0
@@ -204,7 +223,13 @@ Once the backend is running, you can access the interactive API documentation at
 - Export reports in various formats
 - Track compliance requirements and action items
 
-### 5. Settings & Configuration
+### 5. Document Management
+- Upload regulatory documents to Box cloud storage
+- Organize documents in structured folders
+- Create secure shared links for document collaboration
+- Search and manage regulatory documents
+
+### 6. Settings & Configuration
 - Manage user profile and preferences
 - Configure notification settings
 - Set up scheduled analyses
@@ -279,6 +304,10 @@ For support and questions:
 
 ## Roadmap
 
+- [x] Box API integration for document management
+- [x] Google Gemini AI integration
+- [x] Real-time WebSocket communication
+- [x] Production-ready deployment configuration
 - [ ] Advanced AI model integration
 - [ ] Multi-language support
 - [ ] Mobile application

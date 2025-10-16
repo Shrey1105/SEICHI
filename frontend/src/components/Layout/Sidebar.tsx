@@ -5,6 +5,7 @@ import {
   DashboardOutlined,
   ClockCircleOutlined,
   FileTextOutlined,
+  CloudOutlined,
 } from '@ant-design/icons';
 
 const { Sider } = Layout;
@@ -32,6 +33,11 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
       key: '/reports',
       icon: <FileTextOutlined />,
       label: 'Reports',
+    },
+    {
+      key: '/box-documents',
+      icon: <CloudOutlined />,
+      label: 'Box Documents',
     },
   ];
 

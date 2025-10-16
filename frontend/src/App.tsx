@@ -12,6 +12,7 @@ import ReportDetail from './pages/ReportDetail';
 import ReportView from './pages/ReportView';
 import Schedules from './pages/Schedules';
 import Settings from './pages/Settings';
+import BoxDocuments from './pages/BoxDocuments';
 
 const App: React.FC = () => {
   const { isAuthenticated, fetchCurrentUser, loading } = useAuth();
@@ -69,6 +70,7 @@ const App: React.FC = () => {
                   <Route path="/report/:id" element={<ReportView />} />
                   <Route path="/schedules" element={<Schedules />} />
                   <Route path="/settings" element={<Settings />} />
+                  <Route path="/box-documents" element={<BoxDocuments />} />
                   <Route path="*" element={<Navigate to="/dashboard" replace />} />
                 </Routes>
               </Layout>
