@@ -10,7 +10,8 @@ from contextlib import asynccontextmanager
 import logging
 
 from src.api import auth, reports, history, schedules, management, analysis, box
-from src.database.session import engine, Base
+from src.database.session import engine
+from src.database.models import Base
 from src.core.pipeline.orchestrator import AnalysisOrchestrator
 from src.socketio_server import socket_app, sio
 from src.config import DEBUG, HOST, PORT

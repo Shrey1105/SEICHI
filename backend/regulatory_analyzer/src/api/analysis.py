@@ -16,60 +16,22 @@ router = APIRouter()
 class AnalysisCreateRequest(BaseModel):
     title: str
     categories: str
-    target_product_path: str
+    target_product_path: Optional[str] = ""
     start_date: str
     end_date: str
-    notification_emails: List[str] = []
-    trusted_websites: List[str] = []
-    languages: List[str] = ["English"]
-    target_country: str = "United States"
-    guardrails: str = ""
+    notification_emails: Optional[List[str]] = []
+    trusted_websites: Optional[List[str]] = []
+    languages: Optional[List[str]] = ["English"]
+    target_country: Optional[str] = "United States"
+    guardrails: Optional[str] = ""
 
 class AnalysisResponse(BaseModel):
     report_id: int
     status: str
     message: str
 
-# Mock analysis orchestrator for demo
-class MockAnalysisOrchestrator:
-    def __init__(self):
-        self.active_analyses = {}
-    
-    async def start_analysis(self, report_id: int, analysis_request: AnalysisRequest):
-        """Start a mock analysis process"""
-        self.active_analyses[report_id] = {
-            "status": "in_progress",
-            "progress": 0,
-            "current_stage": "Initializing",
-            "message": "Starting analysis..."
-        }
-        
-        # Simulate analysis stages
-        stages = [
-            ("Query Generation", 20),
-            ("Data Acquisition", 40),
-            ("Content Filtering", 60),
-            ("AI Analysis", 80),
-            ("Report Generation", 100)
-        ]
-        
-        for stage_name, progress in stages:
-            await asyncio.sleep(2)  # Simulate processing time
-            self.active_analyses[report_id].update({
-                "current_stage": stage_name,
-                "progress": progress,
-                "message": f"Processing {stage_name.lower()}..."
-            })
-        
-        # Mark as completed
-        self.active_analyses[report_id].update({
-            "status": "completed",
-            "progress": 100,
-            "current_stage": "Completed",
-            "message": "Analysis completed successfully!"
-        })
-
-mock_orchestrator = MockAnalysisOrchestrator()
+# Use real analysis orchestrator
+orchestrator = AnalysisOrchestrator()
 
 @router.post("/create", response_model=AnalysisResponse)
 async def create_analysis(
@@ -104,9 +66,12 @@ async def create_analysis(
         
         # Start analysis in background
         background_tasks.add_task(
-            mock_orchestrator.start_analysis,
-            report.id,
-            analysis_request
+            orchestrator.run_analysis,
+            report_id=report.id,
+            company_profile_id=1,
+            analysis_type="comprehensive",
+            scope=report.scope,
+            keywords=[request.categories]
         )
         
         return AnalysisResponse(
@@ -119,9 +84,10 @@ async def create_analysis(
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/progress/{report_id}")
-async def get_analysis_progress(report_id: int):
+async def get_analysis_progress(report_id: int, db: Session = Depends(get_db)):
     """Get analysis progress for a specific report"""
-    if report_id not in mock_orchestrator.active_analyses:
+    report = db.query(Report).filter(Report.id == report_id).first()
+    if not report:
         return {
             "report_id": report_id,
             "status": "not_found",
@@ -132,15 +98,19 @@ async def get_analysis_progress(report_id: int):
     
     return {
         "report_id": report_id,
-        **mock_orchestrator.active_analyses[report_id]
+        "status": report.status,
+        "progress": 100 if report.status == "completed" else 50 if report.status == "in_progress" else 0,
+        "current_stage": "Completed" if report.status == "completed" else "In Progress" if report.status == "in_progress" else "Pending",
+        "message": f"Analysis {report.status}"
     }
 
 @router.get("/active")
-async def get_active_analyses():
+async def get_active_analyses(db: Session = Depends(get_db)):
     """Get all active analyses"""
+    active_reports = db.query(Report).filter(Report.status.in_(["pending", "in_progress"])).all()
     return {
-        "active_analyses": len(mock_orchestrator.active_analyses),
-        "analyses": list(mock_orchestrator.active_analyses.keys())
+        "active_analyses": len(active_reports),
+        "analyses": [report.id for report in active_reports]
     }
 
 @router.get("/reports", response_model=List[ReportResponse])
@@ -174,10 +144,11 @@ async def delete_report(report_id: int, db: Session = Depends(get_db)):
     return {"message": "Report deleted successfully"}
 
 @router.get("/health")
-async def health_check():
+async def health_check(db: Session = Depends(get_db)):
     """Health check endpoint"""
+    active_reports = db.query(Report).filter(Report.status.in_(["pending", "in_progress"])).count()
     return {
         "status": "healthy",
         "timestamp": datetime.utcnow().isoformat(),
-        "active_analyses": len(mock_orchestrator.active_analyses)
+        "active_analyses": active_reports
     }

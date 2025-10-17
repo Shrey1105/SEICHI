@@ -3,13 +3,12 @@ Database Models for Regulatory Intelligence Platform
 """
 
 from sqlalchemy import Column, Integer, String, DateTime, Text, Boolean, ForeignKey, JSON, Float
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from datetime import datetime
 import uuid
 
-Base = declarative_base()
+from .session import Base
 
 class User(Base):
     __tablename__ = "users"

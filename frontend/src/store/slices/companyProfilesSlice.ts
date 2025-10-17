@@ -21,39 +21,10 @@ export const fetchCompanyProfiles = createAsyncThunk(
   'companyProfiles/fetchProfiles',
   async (params: { skip?: number; limit?: number } = {}, { rejectWithValue }) => {
     try {
-      // Mock company profiles data for demo purposes
-      const mockProfiles: CompanyProfile[] = [
-        {
-          id: 1,
-          company_name: "TechCorp Solutions",
-          industry: "Technology",
-          jurisdiction: "US",
-          company_size: "large",
-          description: "Leading technology company specializing in software solutions",
-          keywords: ["Data Protection", "Cybersecurity", "Financial Services"],
-          trusted_sources: ["SEC.gov", "FTC.gov", "NIST.gov"],
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          user_id: 1
-        },
-        {
-          id: 2,
-          company_name: "GreenEnergy Ltd",
-          industry: "Energy",
-          jurisdiction: "US",
-          company_size: "medium",
-          description: "Renewable energy company focused on sustainable solutions",
-          keywords: ["Environmental", "Safety", "Energy Regulations"],
-          trusted_sources: ["EPA.gov", "DOE.gov", "FERC.gov"],
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          user_id: 1
-        }
-      ];
-      
-      return { profiles: mockProfiles, total: mockProfiles.length };
+      const response = await api.get('/management/company-profiles', { params });
+      return { profiles: response.data, total: response.data.length };
     } catch (error: any) {
-      return rejectWithValue('Failed to fetch company profiles');
+      return rejectWithValue(error.response?.data?.detail || 'Failed to fetch company profiles');
     }
   }
 );

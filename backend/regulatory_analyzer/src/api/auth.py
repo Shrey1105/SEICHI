@@ -10,7 +10,7 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 
 from ..database.session import get_db
-from ..database.models import User
+from ..database.models import User as UserModel
 from ..schemas import UserCreate, User, LoginRequest, Token, TokenData
 from ..config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
 
@@ -39,11 +39,11 @@ def create_access_token(data: dict, expires_delta: timedelta = None):
 
 def get_user_by_username(db: Session, username: str):
     """Get user by username"""
-    return db.query(User).filter(User.username == username).first()
+    return db.query(UserModel).filter(UserModel.username == username).first()
 
 def get_user_by_email(db: Session, email: str):
     """Get user by email"""
-    return db.query(User).filter(User.email == email).first()
+    return db.query(UserModel).filter(UserModel.email == email).first()
 
 def authenticate_user(db: Session, username: str, password: str):
     """Authenticate user with username and password"""
@@ -97,7 +97,7 @@ async def register_user(user: UserCreate, db: Session = Depends(get_db)):
     
     # Create new user
     hashed_password = get_password_hash(user.password)
-    db_user = User(
+    db_user = UserModel(
         email=user.email,
         username=user.username,
         full_name=user.full_name,

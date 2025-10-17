@@ -9,19 +9,23 @@ const { Title, Text } = Typography;
 
 const Login: React.FC = () => {
   const [form] = Form.useForm();
-  const { login, loading, error } = useAuth();
+  const { login, loading, error, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (values: LoginForm) => {
     try {
-      const result = await login(values);
-      if (result.type.endsWith('/fulfilled')) {
-        navigate('/dashboard');
-      }
+      await login(values);
     } catch (err) {
       // Error is handled by Redux state
     }
   };
+
+  // Redirect to dashboard when authenticated
+  React.useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard');
+    }
+  }, [isAuthenticated, navigate]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
@@ -111,7 +115,7 @@ const Login: React.FC = () => {
 
         <div className="text-center mt-6">
           <Text className="text-sm text-gray-500">
-            Demo credentials: admin / password
+            Demo credentials: admin@supervity.ai / admin123
           </Text>
         </div>
       </div>

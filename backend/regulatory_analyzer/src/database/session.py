@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://username:password@localhost:5432/regulatory_intelligence")
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:Shreyas%402005@localhost:5432/regulatory_intelligence")
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

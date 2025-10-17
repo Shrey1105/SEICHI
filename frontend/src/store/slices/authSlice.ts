@@ -24,27 +24,16 @@ export const loginUser = createAsyncThunk(
   'auth/login',
   async (credentials: LoginRequest, { rejectWithValue }) => {
     try {
-      // Mock successful login for demo purposes
-      const mockUser: User = {
-        id: 1,
-        email: credentials.username + "@example.com",
-        username: credentials.username,
-        full_name: "Demo User",
-        is_active: true,
-        is_superuser: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-      
-      const mockToken = "demo-token-123";
+      const response = await api.post('/auth/login', credentials);
+      const { access_token, user } = response.data;
       
       // Store token in localStorage and token manager
-      localStorage.setItem('token', mockToken);
-      tokenManager.setToken(mockToken);
+      localStorage.setItem('token', access_token);
+      tokenManager.setToken(access_token);
       
-      return { token: mockToken, user: mockUser };
+      return { token: access_token, user };
     } catch (error: any) {
-      return rejectWithValue('Login failed');
+      return rejectWithValue(error.response?.data?.detail || 'Login failed');
     }
   }
 );
@@ -53,21 +42,10 @@ export const registerUser = createAsyncThunk(
   'auth/register',
   async (userData: any, { rejectWithValue }) => {
     try {
-      // Mock successful registration for demo purposes
-      const mockUser: User = {
-        id: 2,
-        email: userData.email,
-        username: userData.username,
-        full_name: userData.full_name || "New User",
-        is_active: true,
-        is_superuser: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-      
-      return mockUser;
+      const response = await api.post('/auth/register', userData);
+      return response.data;
     } catch (error: any) {
-      return rejectWithValue('Registration failed');
+      return rejectWithValue(error.response?.data?.detail || 'Registration failed');
     }
   }
 );
@@ -76,21 +54,10 @@ export const getCurrentUser = createAsyncThunk(
   'auth/getCurrentUser',
   async (_, { rejectWithValue }) => {
     try {
-      // Mock user data for demo purposes
-      const mockUser: User = {
-        id: 1,
-        email: "demo@example.com",
-        username: "demo",
-        full_name: "Demo User",
-        is_active: true,
-        is_superuser: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-      
-      return mockUser;
+      const response = await api.get('/auth/me');
+      return response.data;
     } catch (error: any) {
-      return rejectWithValue('Failed to get user info');
+      return rejectWithValue(error.response?.data?.detail || 'Failed to get user info');
     }
   }
 );
@@ -99,21 +66,10 @@ export const updateUser = createAsyncThunk(
   'auth/updateUser',
   async (userData: Partial<User>, { rejectWithValue }) => {
     try {
-      // Mock successful update for demo purposes
-      const mockUser: User = {
-        id: 1,
-        email: userData.email || "demo@example.com",
-        username: userData.username || "demo",
-        full_name: userData.full_name || "Demo User",
-        is_active: true,
-        is_superuser: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-      
-      return mockUser;
+      const response = await api.put('/auth/me', userData);
+      return response.data;
     } catch (error: any) {
-      return rejectWithValue('Failed to update user');
+      return rejectWithValue(error.response?.data?.detail || 'Failed to update user');
     }
   }
 );

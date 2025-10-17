@@ -33,44 +33,10 @@ export const fetchReports = createAsyncThunk(
   'reports/fetchReports',
   async (params: { skip?: number; limit?: number } = {}, { rejectWithValue }) => {
     try {
-      // Mock reports data for demo purposes
-      const mockReports: Report[] = [
-        {
-          id: 1,
-          title: "Q4 2024 Regulatory Changes Analysis",
-          analysis_type: "comprehensive",
-          status: "completed",
-          scope: "Financial services sector regulatory changes",
-          created_at: new Date().toISOString(),
-          completed_at: new Date().toISOString(),
-          user_id: 1,
-          company_profile_id: 1
-        },
-        {
-          id: 2,
-          title: "Environmental Regulations Update",
-          analysis_type: "targeted",
-          status: "in_progress",
-          scope: "Environmental compliance requirements",
-          created_at: new Date().toISOString(),
-          user_id: 1,
-          company_profile_id: 1
-        },
-        {
-          id: 3,
-          title: "Labor Law Changes Analysis",
-          analysis_type: "comprehensive",
-          status: "pending",
-          scope: "Labor regulations and compliance",
-          created_at: new Date().toISOString(),
-          user_id: 1,
-          company_profile_id: 1
-        }
-      ];
-      
-      return { reports: mockReports, total: mockReports.length };
+      const response = await api.get('/reports', { params });
+      return { reports: response.data, total: response.data.length };
     } catch (error: any) {
-      return rejectWithValue('Failed to fetch reports');
+      return rejectWithValue(error.response?.data?.detail || 'Failed to fetch reports');
     }
   }
 );

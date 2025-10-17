@@ -80,8 +80,9 @@ const BoxFileUpload: React.FC<BoxFileUploadProps> = ({
 
     } catch (error) {
       console.error('Upload error:', error);
-      message.error(`Upload failed: ${error.message}`);
-      onUploadError?.(error.message);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      message.error(`Upload failed: ${errorMessage}`);
+      onUploadError?.(errorMessage);
     } finally {
       setUploading(false);
       setUploadProgress(0);
@@ -123,13 +124,13 @@ const BoxFileUpload: React.FC<BoxFileUploadProps> = ({
       if (response.ok) {
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
+        const a = window.document.createElement('a');
         a.href = url;
         a.download = document.filename;
-        document.body.appendChild(a);
+        window.document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
+        window.document.body.removeChild(a);
       }
     } catch (error) {
       console.error('Download error:', error);

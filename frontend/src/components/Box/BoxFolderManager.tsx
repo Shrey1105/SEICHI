@@ -120,7 +120,8 @@ const BoxFolderManager: React.FC<BoxFolderManagerProps> = ({
       }
     } catch (error) {
       console.error('Error creating folder:', error);
-      message.error(`Failed to create folder: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      message.error(`Failed to create folder: ${errorMessage}`);
     }
   };
 
@@ -149,13 +150,14 @@ const BoxFolderManager: React.FC<BoxFolderManagerProps> = ({
       }
     } catch (error) {
       console.error('Error setting up company folders:', error);
-      message.error(`Failed to setup folders: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      message.error(`Failed to setup folders: ${errorMessage}`);
     }
   };
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) {
-      loadDocuments(selectedFolder);
+      loadDocuments(selectedFolder || undefined);
       return;
     }
 

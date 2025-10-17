@@ -36,40 +36,15 @@ const ReportView: React.FC = () => {
     }
   ]);
 
-  // Mock data for the report
+  // TODO: Fetch real report data from API
   const reportData = {
-    title: "Electric Regulations Analysis",
-    date: "2024-01-15",
+    title: "Report Analysis",
+    date: new Date().toISOString().split('T')[0],
     status: "Completed",
-    languages: ["English", "Spanish"],
-    summary: "This analysis covers recent changes in electrical safety regulations affecting consumer electronics and industrial equipment.",
-    affectedProducts: ["Smart Home Devices", "Industrial Controllers", "Power Supplies"],
-    regulatoryChanges: [
-      {
-        id: 1,
-        newRegulation: "IEC 62368-1:2023 - Audio/video, information and communication technology equipment",
-        oldRegulation: "IEC 62368-1:2018",
-        source: "International Electrotechnical Commission",
-        impact: "Enhanced safety requirements for power supplies and thermal management",
-        affectedProducts: ["Smart Home Devices", "Power Supplies"]
-      },
-      {
-        id: 2,
-        newRegulation: "EU Directive 2024/1234 - Digital Product Passport",
-        oldRegulation: "Previous CE marking requirements",
-        source: "European Commission",
-        impact: "Mandatory digital product passports for all electronic products",
-        affectedProducts: ["Smart Home Devices", "Industrial Controllers"]
-      },
-      {
-        id: 3,
-        newRegulation: "FCC Part 15.247 - Unlicensed Radio Frequency Devices",
-        oldRegulation: "FCC Part 15.247 (2022)",
-        source: "Federal Communications Commission",
-        impact: "Updated testing procedures for wireless communication devices",
-        affectedProducts: ["Smart Home Devices"]
-      }
-    ]
+    languages: ["English"],
+    summary: "This analysis covers regulatory changes and compliance requirements.",
+    affectedProducts: ["Products"],
+    regulatoryChanges: []
   };
 
   const handleSendMessage = () => {

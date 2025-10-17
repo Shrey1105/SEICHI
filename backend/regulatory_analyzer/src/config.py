@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Database Configuration
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://username:password@localhost:5432/regulatory_intelligence")
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:Shreyas%402005@localhost:5432/regulatory_intelligence")
 
 # JWT Configuration
 SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-here-change-in-production")

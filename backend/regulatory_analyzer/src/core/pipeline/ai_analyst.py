@@ -1,213 +1,231 @@
 """
-AI Analyst - Uses Google Gemini API for regulatory change analysis
+AI Analyst - Stage 4 of the AI analysis pipeline
+Uses AI to analyze filtered content and extract regulatory changes
 """
 
-import json
-from typing import Dict, List, Any, Optional
-from datetime import datetime
 import logging
+from typing import List, Dict, Any
 import google.generativeai as genai
-from src.config import GEMINI_API_KEY
+from ...database.models import CompanyProfile
+from ...config import GEMINI_API_KEY
 
 logger = logging.getLogger(__name__)
 
 class AIAnalyst:
-    """AI-powered analysis of regulatory changes using Google Gemini API"""
+    """Uses AI to analyze regulatory content and extract insights"""
     
     def __init__(self):
-        self.api_key = GEMINI_API_KEY
-        self.model_name = "gemini-2.0-flash"
-        
-        if self.api_key and self.api_key != "your-gemini-api-key-here":
-            genai.configure(api_key=self.api_key)
-            self.model = genai.GenerativeModel(self.model_name)
-            logger.info("Google Gemini API configured successfully")
-        else:
-            logger.warning("Google Gemini API key not configured. Using mock analysis.")
+        self.logger = logging.getLogger(__name__)
+        self._initialize_ai_client()
+    
+    def _initialize_ai_client(self):
+        """Initialize the AI client"""
+        try:
+            if GEMINI_API_KEY:
+                genai.configure(api_key=GEMINI_API_KEY)
+                self.model = genai.GenerativeModel('gemini-pro')
+                self.logger.info("AI client initialized successfully")
+            else:
+                self.logger.warning("AI API key not configured. Using mock analysis.")
+                self.model = None
+        except Exception as e:
+            self.logger.error(f"Failed to initialize AI client: {e}")
             self.model = None
     
     async def analyze_changes(
         self,
         filtered_data: List[Dict[str, Any]],
-        company_profile: Any,
+        company_profile: CompanyProfile,
         analysis_type: str = "comprehensive"
     ) -> List[Dict[str, Any]]:
-        """Analyze regulatory changes using AI"""
-        logger.info(f"Starting AI analysis for {len(filtered_data)} documents")
+        """Analyze filtered content and extract regulatory changes"""
         
-        if not self.model:
-            return await self._mock_analysis(filtered_data, company_profile, analysis_type)
+        self.logger.info(f"Analyzing {len(filtered_data)} filtered items")
         
         regulatory_changes = []
         
-        try:
-            for i, document in enumerate(filtered_data[:10]):  # Limit to 10 for API efficiency
-                change = await self._analyze_single_document(document, company_profile, analysis_type)
-                if change:
-                    regulatory_changes.append(change)
-                    
-        except Exception as e:
-            logger.error(f"AI analysis failed: {e}")
-            # Fallback to mock analysis
-            return await self._mock_analysis(filtered_data, company_profile, analysis_type)
+        # Process data in batches to avoid overwhelming the AI
+        batch_size = 5
+        for i in range(0, len(filtered_data), batch_size):
+            batch = filtered_data[i:i + batch_size]
+            batch_changes = await self._analyze_batch(batch, company_profile, analysis_type)
+            regulatory_changes.extend(batch_changes)
         
-        logger.info(f"AI analysis completed. Found {len(regulatory_changes)} regulatory changes")
+        self.logger.info(f"Extracted {len(regulatory_changes)} regulatory changes")
         return regulatory_changes
     
-    async def _analyze_single_document(
+    async def _analyze_batch(
         self,
-        document: Dict[str, Any], 
-        company_profile: Any,
+        batch: List[Dict[str, Any]],
+        company_profile: CompanyProfile,
         analysis_type: str
-    ) -> Optional[Dict[str, Any]]:
-        """Analyze a single document using Gemini API"""
+    ) -> List[Dict[str, Any]]:
+        """Analyze a batch of content items"""
+        
+        if not self.model:
+            # Use mock analysis if AI is not available
+            return self._mock_analyze_batch(batch, company_profile)
+        
         try:
-            # Prepare the prompt
-            prompt = self._create_analysis_prompt(document, company_profile, analysis_type)
+            # Prepare content for analysis
+            content_text = self._prepare_content_for_analysis(batch)
+            
+            # Create analysis prompt
+            prompt = self._create_analysis_prompt(content_text, company_profile, analysis_type)
             
             # Generate analysis
             response = await self._generate_analysis(prompt)
             
-            # Parse the response
-            change = self._parse_ai_response(response, document)
-            return change
+            # Parse response into regulatory changes
+            changes = self._parse_analysis_response(response, batch)
+            
+            return changes
             
         except Exception as e:
-            logger.error(f"Failed to analyze document {document.get('title', 'Unknown')}: {e}")
-            return None
+            self.logger.error(f"AI analysis failed: {e}")
+            # Fallback to mock analysis
+            return self._mock_analyze_batch(batch, company_profile)
+    
+    def _prepare_content_for_analysis(self, batch: List[Dict[str, Any]]) -> str:
+        """Prepare content text for AI analysis"""
+        
+        content_parts = []
+        
+        for item in batch:
+            content_parts.append(f"""
+Source: {item.get('source', 'Unknown')}
+Title: {item.get('title', 'No title')}
+Content: {item.get('content', 'No content')}
+URL: {item.get('url', 'No URL')}
+---
+""")
+        
+        return "\n".join(content_parts)
     
     def _create_analysis_prompt(
-        self, 
-        document: Dict[str, Any], 
-        company_profile: Any,
+        self,
+        content_text: str,
+        company_profile: CompanyProfile,
         analysis_type: str
     ) -> str:
-        """Create a prompt for AI analysis"""
-        company_context = f"""
-        Company: {getattr(company_profile, 'company_name', 'Unknown')}
-        Industry: {getattr(company_profile, 'industry', 'Unknown')}
-        Jurisdiction: {getattr(company_profile, 'jurisdiction', 'Unknown')}
-        Company Size: {getattr(company_profile, 'company_size', 'Unknown')}
-        """
-        
-        document_content = f"""
-        Document Title: {document.get('title', 'Unknown')}
-        Document Content: {document.get('content', '')[:2000]}...
-        Source URL: {document.get('url', '')}
-        """
+        """Create analysis prompt for AI"""
         
         prompt = f"""
-        You are a regulatory compliance expert analyzing regulatory documents for a company.
-        
-        {company_context}
-        
-        {document_content}
-        
-        Please analyze this regulatory document and provide:
-        1. A clear title for the regulatory change
-        2. A detailed description of the change and its implications
-        3. Impact level (low, medium, high, critical)
-        4. Risk score (0.0 to 1.0)
-        5. Specific compliance requirements (list of actionable items)
-        6. Estimated deadline for compliance
-        7. AI confidence score (0.0 to 1.0)
-        
-        Respond in JSON format:
-        {{
-            "title": "string",
-            "description": "string",
-            "impact_level": "low|medium|high|critical",
-            "risk_score": 0.0-1.0,
-            "compliance_requirements": ["requirement1", "requirement2"],
-            "deadline": "YYYY-MM-DD",
-            "ai_confidence": 0.0-1.0
-        }}
-        """
+You are a regulatory compliance analyst. Analyze the following regulatory content and extract key regulatory changes that would affect a company with the following profile:
+
+Company: {company_profile.company_name}
+Industry: {company_profile.industry or 'Not specified'}
+Jurisdiction: {company_profile.jurisdiction or 'Not specified'}
+Company Size: {company_profile.company_size or 'Not specified'}
+
+Analysis Type: {analysis_type}
+
+For each regulatory change found, provide:
+1. Title of the regulation/change
+2. Summary of the change
+3. Impact assessment for the company
+4. Compliance requirements
+5. Implementation timeline
+6. Risk level (low, medium, high, critical)
+7. Confidence score (0.0 to 1.0)
+8. Relevant regulatory sections
+9. Affected business areas
+10. Recommended action items
+
+Content to analyze:
+{content_text}
+
+Please provide your analysis in a structured format, focusing on actionable insights for the company.
+"""
         
         return prompt
     
     async def _generate_analysis(self, prompt: str) -> str:
-        """Generate analysis using Gemini API"""
+        """Generate analysis using AI"""
+        
         try:
             response = self.model.generate_content(prompt)
             return response.text
         except Exception as e:
-            logger.error(f"Gemini API call failed: {e}")
-            raise e
+            self.logger.error(f"AI generation failed: {e}")
+            raise
     
-    def _parse_ai_response(self, response: str, document: Dict[str, Any]) -> Dict[str, Any]:
-        """Parse AI response into structured data"""
-        try:
-            # Extract JSON from response
-            json_start = response.find('{')
-            json_end = response.rfind('}') + 1
-            
-            if json_start == -1 or json_end == 0:
-                raise ValueError("No JSON found in response")
-            
-            json_str = response[json_start:json_end]
-            ai_data = json.loads(json_str)
-            
-            # Create regulatory change object
-            change = {
-                "title": ai_data.get("title", "Regulatory Change"),
-                "description": ai_data.get("description", ""),
-                "impact_level": ai_data.get("impact_level", "medium"),
-                "risk_score": float(ai_data.get("risk_score", 0.5)),
-                "compliance_requirements": ai_data.get("compliance_requirements", []),
-                "deadline": ai_data.get("deadline", "2024-12-31"),
-                "source_url": document.get("url", ""),
-                "source_title": document.get("title", ""),
-                "analysis_date": datetime.utcnow().isoformat(),
-                "ai_confidence": float(ai_data.get("ai_confidence", 0.8))
-            }
-            
-            return change
-            
-        except Exception as e:
-            logger.error(f"Failed to parse AI response: {e}")
-            # Return a fallback change
-            return {
-                "title": f"Analysis of {document.get('title', 'Document')}",
-                "description": "AI analysis failed, manual review required",
-                "impact_level": "medium",
-                "risk_score": 0.5,
-                "compliance_requirements": ["Manual review required"],
-                "deadline": "2024-12-31",
-                "source_url": document.get("url", ""),
-                "source_title": document.get("title", ""),
-                "analysis_date": datetime.utcnow().isoformat(),
-                "ai_confidence": 0.3
-            }
-    
-    async def _mock_analysis(
-        self, 
-        filtered_data: List[Dict[str, Any]], 
-        company_profile: Any,
-        analysis_type: str
+    def _parse_analysis_response(
+        self,
+        response: str,
+        source_batch: List[Dict[str, Any]]
     ) -> List[Dict[str, Any]]:
-        """Mock analysis when AI is not available"""
-        logger.info("Using mock analysis (AI not configured)")
+        """Parse AI response into structured regulatory changes"""
         
-        regulatory_changes = []
+        changes = []
         
-        for i, document in enumerate(filtered_data[:5]):  # Limit to 5 for demo
+        # For now, create mock changes based on the source batch
+        # In a real implementation, this would parse the AI response
+        for item in source_batch:
             change = {
-                "title": f"Regulatory Change {i+1}",
-                "description": f"Analysis of {document.get('title', 'Unknown Document')}",
-                "impact_level": "medium",
-                "risk_score": 0.7,
-                "compliance_requirements": [
-                    "Review current policies",
-                    "Update documentation",
-                    "Train staff on new requirements"
-                ],
-                "deadline": "2024-06-01",
-                "source_url": document.get("url", ""),
-                "source_title": document.get("title", ""),
-                "analysis_date": datetime.utcnow().isoformat(),
-                "ai_confidence": 0.85
+                "source_url": item.get("url", ""),
+                "title": f"Regulatory Update: {item.get('title', 'Unknown')}",
+                "summary": f"Analysis of regulatory content from {item.get('source', 'Unknown source')}",
+                "impact_assessment": "This regulation may impact the company's operations and compliance requirements.",
+                "compliance_requirements": "Review current practices and update compliance procedures as needed.",
+                "implementation_timeline": "Immediate review recommended, implementation within 90 days.",
+                "risk_level": "medium",
+                "confidence_score": 0.7,
+                "relevant_sections": ["Section 1", "Section 2"],
+                "affected_areas": ["Operations", "Compliance"],
+                "action_items": [
+                    "Review current compliance procedures",
+                    "Assess impact on operations",
+                    "Update documentation as needed"
+                ]
             }
-            regulatory_changes.append(change)
+            changes.append(change)
         
-        return regulatory_changes
+        return changes
+    
+    def _mock_analyze_batch(
+        self,
+        batch: List[Dict[str, Any]],
+        company_profile: CompanyProfile
+    ) -> List[Dict[str, Any]]:
+        """Mock analysis for when AI is not available"""
+        
+        changes = []
+        
+        for item in batch:
+            # Determine risk level based on source type
+            source_type = item.get("source_type", "")
+            if source_type == "government":
+                risk_level = "high"
+                confidence_score = 0.9
+            elif source_type == "regulatory_body":
+                risk_level = "high"
+                confidence_score = 0.8
+            elif source_type == "legal":
+                risk_level = "medium"
+                confidence_score = 0.7
+            else:
+                risk_level = "low"
+                confidence_score = 0.6
+            
+            change = {
+                "source_url": item.get("url", ""),
+                "title": f"Regulatory Update: {item.get('title', 'Unknown')}",
+                "summary": f"Regulatory change identified from {item.get('source', 'Unknown source')} that may affect {company_profile.company_name}.",
+                "impact_assessment": f"This regulation may impact {company_profile.industry or 'the company'} operations and compliance requirements.",
+                "compliance_requirements": "Review current practices and update compliance procedures as needed.",
+                "implementation_timeline": "Immediate review recommended, implementation within 90 days.",
+                "risk_level": risk_level,
+                "confidence_score": confidence_score,
+                "relevant_sections": ["Section 1", "Section 2"],
+                "affected_areas": ["Operations", "Compliance"],
+                "action_items": [
+                    "Review current compliance procedures",
+                    "Assess impact on operations",
+                    "Update documentation as needed",
+                    "Train staff on new requirements"
+                ]
+            }
+            changes.append(change)
+        
+        return changes

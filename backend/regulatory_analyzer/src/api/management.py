@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 
 from ..database.session import get_db
-from ..database.models import User, CompanyProfile, TrustedSource
+from ..database.models import User, CompanyProfile, TrustedSource, Report
 from ..schemas import (
     CompanyProfileCreate, CompanyProfile, CompanyProfileUpdate,
     TrustedSourceCreate, TrustedSource, TrustedSourceUpdate
